@@ -9,14 +9,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 - PHP 8 support.
 
-### Deprecated
-- Nothing
+## 1.0.1 - 2023-06-27
 
-### Fixed
-- Nothing
-
-### Removed
-- Nothing
-
-### Security
-- Nothing
+### Added
+- Composer install requirements.
