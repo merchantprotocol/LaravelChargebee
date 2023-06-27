@@ -2,6 +2,7 @@
     "name": "merchantprotocol/laravel-chargebee",
     "type": "library",
     "description": "A Laravel package which provides an easy way to handle billing and subscriptions.",
+    "version": "1.0.1",
     "keywords": [
         "TijmenWierenga",
         "Chargebee",
