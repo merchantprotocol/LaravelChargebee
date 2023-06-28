@@ -1,9 +1,9 @@
 <?php
 namespace TijmenWierenga\LaravelChargebee;
 
-use ChargeBee_Environment;
-use ChargeBee_HostedPage;
-use ChargeBee_Subscription;
+use ChargeBee\ChargeBee\Environment;
+use ChargeBee\ChargeBee\Models\HostedPage;
+use ChargeBee\ChargeBee\Models\Subscription;
 use Illuminate\Database\Eloquent\Model;
 use TijmenWierenga\LaravelChargebee\Exceptions\MissingPlanException;
 use TijmenWierenga\LaravelChargebee\Exceptions\UserMismatchException;
@@ -57,7 +57,7 @@ class Subscriber
     public function __construct(Model $model = null, $plan = null, array $config = null)
     {
         // Set up Chargebee environment keys
-        ChargeBee_Environment::configure(getenv('CHARGEBEE_SITE'), getenv('CHARGEBEE_KEY'));
+        Environment::configure(getenv('CHARGEBEE_SITE'), getenv('CHARGEBEE_KEY'));
 
         // You can set a plan on the constructor, but it's not required
         $this->plan = $plan;
@@ -78,7 +78,7 @@ class Subscriber
 
         $subscription = $this->buildSubscription($cardToken);
 
-        $result = ChargeBee_Subscription::create($subscription);
+        $result = Subscription::create($subscription);
         $subscription = $result->subscription();
         $card = $result->card();
         $addons = $subscription->addons;
@@ -113,7 +113,7 @@ class Subscriber
     {
         if (! $this->plan) throw new MissingPlanException('No plan was set to assign to the customer.');
 
-        return ChargeBee_HostedPage::checkoutNew([
+        return HostedPage::checkoutNew([
             'subscription' => [
                 'planId' => $this->plan
             ],
@@ -136,14 +136,14 @@ class Subscriber
      */
     public function registerFromHostedPage($id)
     {
-        $result = ChargeBee_HostedPage::retrieve($id);
+        $result = HostedPage::retrieve($id);
 
         // TODO: Check if subscription was successful or failed.
         // Check if the ID of the model is the same as the ID of the model that performed the payment
         if (! (int) base64_decode($result->hostedPage()->passThruContent) === $this->model->id) throw new UserMismatchException('The user who performed the payment is not the user you are trying to attach the subscription to');
 
         $subscriptionId = $result->hostedPage()->content['subscription']['id'];
-        $result = ChargeBee_Subscription::retrieve($subscriptionId);
+        $result = Subscription::retrieve($subscriptionId);
         $subscription = $result->subscription();
         $addons = $subscription->addons;
         $card = $result->card();
@@ -211,7 +211,7 @@ class Subscriber
      */
     public function swap(Subscription $subscription, $plan)
     {
-        return ChargeBee_Subscription::update($subscription->subscription_id, [
+        return Subscription::update($subscription->subscription_id, [
             'plan_id' => $plan
         ])->subscription();
     }
@@ -225,7 +225,7 @@ class Subscriber
     public function cancel(Subscription $subscription, $cancelImmediately = false)
     {
         // TODO: Check if subscription is active or in trial
-        return ChargeBee_Subscription::cancel($subscription->subscription_id, [
+        return Subscription::cancel($subscription->subscription_id, [
             'end_of_term' => ! $cancelImmediately
         ])->subscription();
     }
@@ -238,7 +238,7 @@ class Subscriber
      */
     public function resume(Subscription $subscription)
     {
-        return ChargeBee_Subscription::removeScheduledCancellation($subscription->subscription_id)->subscription();
+        return Subscription::removeScheduledCancellation($subscription->subscription_id)->subscription();
     }
 
     /**
@@ -250,7 +250,7 @@ class Subscriber
     public function reactivate(Subscription $subscription)
     {
         // TODO: Check if subscription is cancelled
-        return ChargeBee_Subscription::reactivate($subscription->subscription_id)->subscription();
+        return Subscription::reactivate($subscription->subscription_id)->subscription();
     }
 
     /**
