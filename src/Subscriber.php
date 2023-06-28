@@ -113,18 +113,21 @@ class Subscriber
     {
         if (! $this->plan) throw new MissingPlanException('No plan was set to assign to the customer.');
 
-        return HostedPage::checkoutNew([
-            'subscription' => [
-                'planId' => $this->plan
-            ],
-            'addons' => [
-                $this->addOns
-            ],
+        $data = [
+            'subscription_items[item_price_id]' => [$this->plan],
+            'subscription_items[quantity]' => [1],
             'embed' => $embed,
             'redirectUrl' => $this->config['redirect']['success'],
             'cancelledUrl' => $this->config['redirect']['cancelled'],
-            'passThruContent' => base64_encode($this->model->id)
-        ])->hostedPage()->url;
+            'passThruContent' => base64_encode($this->model->id),
+        ];
+
+        foreach ($this->addOns as $addOn) {
+            $data['subscription_items[item_price_id]'][] = $addOn->id;
+            $data['subscription_items[quantity]'][] = $addOn->quantity;
+        }
+
+        return HostedPage::checkoutNewForItems($data)->hostedPage()->url;
     }
 
     /**
